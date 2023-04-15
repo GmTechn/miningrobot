@@ -1,6 +1,15 @@
 // ignore_for_file: avoid_web_libraries_in_flutter
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:gotrue/gotrue.dart';
+import 'package:gotrue/src/types/auth_response.dart';
+import 'package:miningrobot/dashboard.dart';
+import 'package:miningrobot/login.dart';
+import 'package:miningrobot/snackbar.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:gotrue/gotrue.dart';
 
 
 class SignUp extends StatefulWidget {
@@ -8,279 +17,174 @@ class SignUp extends StatefulWidget {
   _SignUpState createState() => _SignUpState();
 }
 
+
 class _SignUpState extends State<SignUp> {
 
   bool terms= false;
 
-  Widget NavButton(){
-    return Container(
-      alignment: Alignment.centerLeft,
-      child: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
+  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _phoneNumberController = TextEditingController();
+  final _confirmPasswordController =TextEditingController();
 
-          },
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.white,
-          )
-      ),
-    );
-
+  @override
+  void showSnackbar(String message) {
+    final snackBar = SnackBar(content: Text(message));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
-  // Widget createProfile(){
-  //   return const CircleAvatar(
-  //     radius: 60,
-  //     backgroundColor: Colors.white,
-  //     backgroundImage: NetworkImage('https://imageio.forbes.com/specials-images/imageserve/614d55107441e2d9ba4238f6/The-7-Biggest-Artificial-Intelligence--AI--Trends-In-2022/960x0.jpg?format=jpg&width=960'),
-  //     child: Align(
-  //       alignment: Alignment.bottomRight,
-  //       child: Icon(
-  //         Icons.add,
-  //         color: Colors.white,
-  //       ),
-  //     ),
-  //   );
-  // }
+
+  Future<void> signUp() async {
+    String username = _usernameController.text;
+    String email = _emailController.text;
+    String password = _passwordController.text;
+    String phoneNumber = _phoneNumberController.text;
+
+
+    // Validate email, password, phone number and confirm password
+    // ...
+
+    try {
+      // Sign up the user
+      final response = await supabase.auth.signUp(email: email, password: password);
+
+
+      // Send email verification
+      // await supabase.auth.sendEmailVerification();
+
+
+      // Get the current authenticated user
+     final currentUser = supabase.auth.currentUser;
+
+      // Access the user's details
+      if (currentUser != null) {
+        print('User ID: ${currentUser.id}');
+        print('User email: ${currentUser.email}');
+        // print('User phone number: ${currentUser.phoneNumber}');
+      } else {
+        print('No user is currently authenticated');
+      }
+
+      // Store user data in Supabase
+      final userData = {
+        'email': email,
+        'phone_number': phoneNumber,
+      };
+
+      final insertedData = await supabase.from('SignupTable').insert(userData).execute();
+
+      // Navigate to the home screen
+      // ignore: use_build_context_synchronously
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Dashboard()),
+      );
+    } catch (e) {
+      // Show error message to the user
+      showSnackbar(e.toString());
+    }
+  }
+
+
+
+  Widget createProfile(){
+    return const CircleAvatar(
+      radius: 60,
+      backgroundColor: Colors.white,
+      backgroundImage: NetworkImage('https://imageio.forbes.com/specials-images/imageserve/614d55107441e2d9ba4238f6/The-7-Biggest-Artificial-Intelligence--AI--Trends-In-2022/960x0.jpg?format=jpg&width=960'),
+      child: Align(
+        alignment: Alignment.bottomRight,
+        child: Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
 
   Widget Username(){
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget> [
 
-        const SizedBox(height: 10,),
-        Container(
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: const [
-              BoxShadow(
-                  color: Colors.black,
-                  blurRadius: 6,
-                  offset: Offset(0, 2)
-              ),
-            ],
-          ),
-          height: 60,
-          child: const TextField(
-            keyboardType: TextInputType.name,
-            style: TextStyle(
-              color: Colors.black87,
-            ),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.all(20),
-              prefixIcon: Icon(
-                Icons.account_circle,
-                color:Color(0xff281018),
-              ),
-              hintText: 'Username',
-              hintStyle: TextStyle(
-                color: Colors.black54,
-              ),
-            ),
-          ),
-
-        )
-      ],
-
+    return TextField(
+      controller: _usernameController,
+      decoration: InputDecoration(
+        hintText: 'Username',
+      ),
     );
   }
 
   Widget Email(){
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget> [
-
-        const SizedBox(height: 10,),
-        Container(
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: const [
-              BoxShadow(
-                  color: Colors.black,
-                  blurRadius: 6,
-                  offset: Offset(0, 2)
-              ),
-            ],
-          ),
-          height: 60,
-          child: const TextField(
-            keyboardType: TextInputType.emailAddress,
-            style: TextStyle(
-              color: Colors.black87,
-            ),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.all(20),
-              prefixIcon: Icon(
-                Icons.email,
-                color:Color(0xff281018),
-              ),
-              hintText: 'Email',
-              hintStyle: TextStyle(
-                color: Colors.black54,
-              ),
-            ),
-          ),
-
-        )
-      ],
-
+    return TextField(
+      controller: _emailController,
+      decoration: const InputDecoration(
+        hintText: 'Email',
+      ),
     );
   }
 
   Widget Password(){
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget> [
-
-        const SizedBox(height: 10,),
-        Container(
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: const [
-              BoxShadow(
-                  color: Colors.black,
-                  blurRadius: 6,
-                  offset: Offset(0, 2)
-              ),
-            ],
-          ),
-          height: 60,
-          child: const TextField(
-            obscureText: true,
-            style: TextStyle(
-              color: Colors.black87,
-            ),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.all(20),
-              prefixIcon: Icon(
-                Icons.lock,
-                color:Color(0xff281018),
-              ),
-              hintText: 'Password',
-              hintStyle: TextStyle(
-                color: Colors.black54,
-              ),
-            ),
-          ),
-
-        )
-      ],
-
+    return TextField(
+      controller: _passwordController,
+      obscureText: true,
+      decoration: const InputDecoration(
+        hintText: 'Password',
+      ),
     );
   }
 
   Widget ConfirmPassword(){
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget> [
-
-        const SizedBox(height: 10,),
-        Container(
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: const [
-              BoxShadow(
-                  color: Colors.black,
-                  blurRadius: 6,
-                  offset: Offset(0, 2)
-              ),
-            ],
-          ),
-          height: 60,
-          child: const TextField(
-            obscureText: true,
-            style: TextStyle(
-              color: Colors.black87,
-            ),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.all(20),
-              prefixIcon: Icon(
-                Icons.lock,
-                color:Color(0xff281018),
-              ),
-              hintText: 'Confirm Password',
-              hintStyle: TextStyle(
-                color: Colors.black54,
-              ),
-            ),
-          ),
-
-        )
-      ],
-
+    return TextField(
+      controller: _confirmPasswordController,
+      obscureText: true,
+      decoration: const InputDecoration(
+        hintText: 'Confirm Password',
+      ),
     );
   }
 
   Widget PhoneNumber (){
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget> [
-
-        const SizedBox(height: 10,),
-        Container(
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: const [
-              BoxShadow(
-                  color: Colors.black,
-                  blurRadius: 6,
-                  offset: Offset(0, 2)
-              ),
-            ],
-          ),
-          height: 60,
-          child: const TextField(
-            keyboardType: TextInputType.phone,
-            style: TextStyle(
-              color: Colors.black87,
-            ),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.all(20),
-              prefixIcon: Icon(
-                Icons.phone,
-                color:Color(0xff281018),
-              ),
-              hintText: 'Phone Number',
-              hintStyle: TextStyle(
-                color: Colors.black54,
-              ),
-            ),
-          ),
-
-        )
-      ],
-
+    return TextField(
+      controller: _phoneNumberController,
+      decoration: const InputDecoration(
+        hintText: 'Phone Number',
+      ),
     );
   }
 
+  Widget Accept(){
+
+    return RichText(text: const TextSpan(
+        children: [
+          TextSpan(text: 'I agree to all the '
+          ),
+          TextSpan(text:'terms',style:
+          TextStyle(
+            decoration: TextDecoration.underline,
+          )
+          ),
+          TextSpan(text:' and '),
+
+          TextSpan(text: 'conditions.',
+              style: TextStyle(
+                  decoration: TextDecoration.underline
+              ))
+        ]
+    )
+    );
+  }
   Widget TermsandCond(){
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
+
         Theme(
           data: ThemeData(
             unselectedWidgetColor: Colors.white,
           ),
           child: Checkbox(
             value: terms,
-            checkColor: Color(0xff743d4f),
+            checkColor: Colors.black,
             activeColor: Colors.white,
             onChanged: (value){
               setState(() {
@@ -289,42 +193,66 @@ class _SignUpState extends State<SignUp> {
             },
           ),
         ),
-        const Text('I accept all terms and conditions',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.normal,
-          ),
-        ),
+
+        Accept(),
+
       ],
     );
   }
 
   Widget SingUpButton(){
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 25),
+      padding: const EdgeInsets.symmetric(vertical: 30),
       //width: double.infinity,
-      child: TextButton(
-        onPressed: () => print("Signup"),
-        style: ButtonStyle(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TextButton(
+            onPressed: signUp,
+            // signup,
+            style: ButtonStyle(
 
-            foregroundColor: MaterialStateProperty.all(Colors.white),
-            backgroundColor: MaterialStateProperty.all(Color(0xff22357B),),
-            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  side: const BorderSide(width: 1, color: Colors.white),
+                foregroundColor: MaterialStateProperty.all(Colors.white),
+                backgroundColor: MaterialStateProperty.all(Color(0xff22357B),),
+                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      side: const BorderSide(width: 1, color: Colors.white),
+                    )
                 )
-            )
 
-        ),
+            ),
 
-        child: const Text('               Sign Up             ',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+            child: const Text('       Sign Up        ',
+
+            ),
+
           ),
-        ),
+          SizedBox(width: 110,),
+          TextButton(
+            onPressed: () => {
+              Navigator.push(context, MaterialPageRoute(builder: (context)=> Login())
+            )
+              },
+            style: ButtonStyle(
 
+                foregroundColor: MaterialStateProperty.all(Colors.white),
+                backgroundColor: MaterialStateProperty.all(Color(0xff22357B),),
+                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      side: const BorderSide(width: 1, color: Colors.white),
+                    )
+                )
+
+            ),
+
+            child: const Text('   back to Login   ',
+
+            ),
+
+          ),
+       ],
       ),
     );
   }
@@ -338,6 +266,7 @@ class _SignUpState extends State<SignUp> {
         child: Stack(
           children: <Widget>[
             Container(
+              padding: EdgeInsets.all(5),
               height: double.infinity,
               width: double.infinity,
               decoration: const BoxDecoration(
@@ -349,7 +278,8 @@ class _SignUpState extends State<SignUp> {
                         Color(0xff131D44),
                         Color(0xff22357B),
                         Color(0xff131D44),
-
+                        Color(0xff22357B),
+                        Color(0xff131D44),
 
 
                       ]
@@ -364,10 +294,11 @@ class _SignUpState extends State<SignUp> {
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children:  <Widget>[
-                    NavButton(),
+
                     const SizedBox(height: 20,),
-                    //createProfile(),
+                    createProfile(),
                     const SizedBox(height: 5,),
                     Username(),
                     const SizedBox(height: 5,),
@@ -378,18 +309,18 @@ class _SignUpState extends State<SignUp> {
                     ConfirmPassword(),
                     const SizedBox(height: 5,),
                     PhoneNumber(),
-                    const SizedBox(height: 5,),
+                    const SizedBox(height:40,),
                     TermsandCond(),
-                    const SizedBox(height: 5,),
+                    const SizedBox(height: 30,),
                     SingUpButton(),
-                    const SizedBox(height: 70,),
+                    const SizedBox(height: 30,),
                     const Text('Sign up with Social Media ',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 10,),
+                    const SizedBox(height: 30,),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
@@ -460,5 +391,3 @@ class _SignUpState extends State<SignUp> {
 
 
 }
-
-
